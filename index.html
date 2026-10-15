@@ -1,0 +1,502 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Family Week</title>
+  <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+  <style>
+    :root {
+      font-family: "Baskerville", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+      color: #203c34;
+      background: #e9e6da;
+      font-synthesis: none;
+      --ink: #203c34;
+      --muted: #716f62;
+      --rule: #c7c2b2;
+      --paper: #f4f0e5;
+      --deep-green: #29483c;
+      --olive: #778776;
+      --rust: #b65b43;
+      --plum: #8e7893;
+      --blue: #598ab0;
+      --hour-height: 17px;
+      --day-hours: 14;
+      --meta-height: 44px;
+      --day-column: 116px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      min-height: 100vh;
+      padding: clamp(10px, 2vw, 24px);
+      background-color: #e9e6da;
+      background-image: radial-gradient(#cfcabb 0.55px, transparent 0.65px);
+      background-size: 9px 9px;
+    }
+
+    header {
+      color: var(--ink);
+    }
+
+    .family-sheet {
+      width: min(1500px, 100%);
+      margin: 0 auto;
+      padding: clamp(12px, 1.4vw, 20px);
+      border: 1px solid #8d9885;
+      outline: 1px solid #a8a28f;
+      outline-offset: 3px;
+      background: var(--paper);
+      box-shadow: inset 0 0 0 3px #e7e1d2, inset 0 0 0 4px #c9c2b1;
+    }
+
+    .masthead {
+      display: grid;
+      grid-template-columns: minmax(110px, 1fr) minmax(0, 4fr) minmax(110px, 1fr);
+      align-items: center;
+      min-height: 102px;
+      padding: 2px 20px 18px;
+      border-bottom: 1px solid var(--rule);
+      text-align: center;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(24px, 4vw, 45px);
+      font-weight: 500;
+      letter-spacing: 0.11em;
+      line-height: 1.1;
+      text-transform: uppercase;
+    }
+
+    .masthead-title { grid-column: 2; }
+
+    .subtitle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      margin: 10px 0 0;
+      color: #394e43;
+      font-size: 13px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+    }
+
+    .subtitle::before, .subtitle::after {
+      width: clamp(20px, 5vw, 58px);
+      height: 1px;
+      background: #b89e69;
+      content: "";
+    }
+
+    .family-mark {
+      display: grid;
+      grid-column: 3;
+      justify-items: center;
+      justify-self: end;
+      gap: 5px;
+      color: var(--deep-green);
+    }
+
+    .monogram {
+      display: grid;
+      width: 52px;
+      aspect-ratio: 1;
+      place-items: center;
+      border: 1px solid #879083;
+      outline: 1px solid #879083;
+      outline-offset: 3px;
+      font-size: 20px;
+      font-style: italic;
+    }
+
+    .mark-caption {
+      font-size: 8px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    main { padding-top: 16px; }
+
+    .table-wrap {
+      overflow: auto;
+      border: 1px solid #bbb5a5;
+      background: #f6f2e9;
+    }
+
+    table {
+      width: 100%;
+      min-width: 760px;
+      border-collapse: separate;
+      border-spacing: 0;
+      table-layout: fixed;
+    }
+
+    th, td { border-right: 1px solid #d1cbbb; border-bottom: 1px solid #d1cbbb; }
+    tr > :last-child { border-right: 0; }
+    tbody tr:last-child > * { border-bottom: 0; }
+
+    thead th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      height: 70px;
+      padding: 9px 12px;
+      background: #e6e4d7;
+      color: #263f35;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+
+    thead th:first-child {
+      width: var(--day-column);
+      background: var(--deep-green);
+      color: #f3efe3;
+      letter-spacing: 0.22em;
+    }
+
+    thead th.member-heading { vertical-align: bottom; }
+
+    .member-sigil {
+      display: block;
+      width: 25px;
+      height: 25px;
+      margin: 0 auto 5px;
+      color: var(--member-accent);
+      font-size: 20px;
+      font-style: italic;
+      line-height: 25px;
+      text-align: center;
+    }
+
+    .member-0 { --member-accent: var(--olive); --member-wash: #e4e7de; --member-ink: #314537; }
+    .member-1 { --member-accent: var(--rust); --member-wash: #f0e0d9; --member-ink: #57392f; }
+    .member-2 { --member-accent: var(--plum); --member-wash: #e8e0e9; --member-ink: #493b4d; }
+    .member-3 { --member-accent: var(--blue); --member-wash: #dfe7ea; --member-ink: #344c5b; }
+
+    tbody th {
+      position: sticky;
+      left: 0;
+      z-index: 1;
+      width: var(--day-column);
+      min-width: var(--day-column);
+      padding: 0;
+      background: #efede3;
+      color: #31463b;
+    }
+
+    .day-meta, .timeline-meta {
+      height: var(--meta-height);
+      border-bottom: 1px solid #d1cbbb;
+    }
+
+    .day-meta {
+      display: grid;
+      place-items: center;
+      padding: 0 5px;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .time-axis {
+      position: relative;
+      height: calc(var(--hour-height) * var(--day-hours));
+      color: var(--muted);
+      font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+      font-size: 10px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .time-label {
+      position: absolute;
+      top: calc(var(--hour) * var(--hour-height));
+      right: 7px;
+      transform: translateY(-50%);
+      white-space: nowrap;
+    }
+
+    td.timeline-cell {
+      position: relative;
+      height: calc(var(--meta-height) + var(--hour-height) * var(--day-hours));
+      padding: 0;
+      vertical-align: top;
+      background: transparent;
+    }
+
+    .timeline-meta {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      overflow-x: auto;
+      padding: 3px 6px;
+      scrollbar-width: thin;
+      white-space: nowrap;
+    }
+
+    .untimed-activity {
+      flex: 0 0 auto;
+      max-width: 100%;
+      overflow: hidden;
+      padding: 3px 6px;
+      border-bottom: 1px dotted var(--member-accent, var(--olive));
+      color: var(--member-ink, #314537);
+      font-size: 11px;
+      text-overflow: ellipsis;
+    }
+
+    .time-grid, .event-layer {
+      position: absolute;
+      top: var(--meta-height);
+      right: 0;
+      left: 0;
+      height: calc(var(--hour-height) * var(--day-hours));
+    }
+
+    .time-grid {
+      background: repeating-linear-gradient(
+        to bottom,
+        transparent 0,
+        transparent calc(var(--hour-height) - 1px),
+        #d8d2c3 calc(var(--hour-height) - 1px),
+        #d8d2c3 var(--hour-height)
+      );
+      pointer-events: none;
+    }
+
+    .event-layer { pointer-events: none; }
+
+    .timed-activity {
+      position: absolute;
+      top: var(--event-top);
+      right: 5px;
+      left: 5px;
+      height: var(--event-height);
+      min-height: 22px;
+      overflow: hidden;
+      padding: 3px 7px;
+      border-left: 3px solid var(--member-accent, var(--olive));
+      background: var(--member-wash, #e4e7de);
+      color: var(--member-ink, #314537);
+      font-size: 12px;
+      line-height: 1.15;
+      text-overflow: ellipsis;
+      pointer-events: auto;
+    }
+
+    .timed-activity strong { display: block; font-weight: 600; }
+
+    tbody tr:nth-child(even) th { background-color: #eae8de; }
+
+    @media (max-width: 600px) {
+      body { padding: 10px; }
+      .family-sheet { padding: 10px; }
+      .masthead {
+        grid-template-columns: 1fr 50px;
+        min-height: 0;
+        gap: 16px;
+        padding: 7px 5px 14px;
+      }
+      .masthead-title { grid-column: 1; grid-row: 1; text-align: left; }
+      h1 { font-size: clamp(20px, 6vw, 30px); letter-spacing: 0.07em; }
+      .subtitle { justify-content: flex-start; gap: 8px; font-size: 10px; letter-spacing: 0.18em; }
+      .subtitle::before { display: none; }
+      .subtitle::after { width: 24px; }
+      .family-mark { grid-column: 2; grid-row: 1; }
+      .monogram { width: 38px; font-size: 16px; }
+      .mark-caption { display: none; }
+      main { padding-top: 12px; }
+      :root { --hour-height: 15px; --meta-height: 42px; --day-column: 88px; }
+      thead th { height: 62px; padding: 7px 5px; font-size: 11px; letter-spacing: 0.12em; }
+      .day-meta { font-size: 10px; letter-spacing: 0.08em; }
+      .time-axis { font-size: 9px; }
+      .time-label { right: 4px; }
+      .untimed-activity { font-size: 10px; }
+      .timed-activity { right: 3px; left: 3px; min-height: 20px; padding: 2px 5px; font-size: 11px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="family-sheet">
+      <div class="masthead">
+        <div class="masthead-title">
+          <h1>The Leaver-Smith Family</h1>
+          <p class="subtitle">Our Weekly Schedule</p>
+        </div>
+        <div class="family-mark" aria-label="Leaver-Smith family monogram">
+          <span class="monogram">LS</span>
+        </div>
+      </div>
+      <main>
+        <div class="table-wrap">
+          <table id="schedule" aria-label="Weekly family activities"></table>
+        </div>
+      </main>
+    </div>
+  </header>
+
+  <script>
+    const weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+    const dayStartMinutes = 7 * 60;
+    const dayEndMinutes = 21 * 60;
+    const dayDurationMinutes = dayEndMinutes - dayStartMinutes;
+    const exampleSchedule = {
+      family_members: ["Alex", "Jamie", "Morgan"],
+      activities: {
+        Monday: { Alex: ["Swimming"], Morgan: ["Library" ] },
+        Tuesday: { Jamie: ["Guitar lesson", "Pick up groceries"], Alex: ["Soccer practice"] },
+        Wednesday: { Morgan: ["Art club"] },
+        Thursday: { Jamie: ["Book club"] },
+        Friday: { Alex: ["Dinner with Grandma"], Jamie: ["Movie night"] },
+        Saturday: { Alex: ["Farmers market"], Morgan: ["Birthday party"] },
+        Sunday: { Jamie: ["Meal prep"] }
+      }
+    };
+
+    const table = document.querySelector("#schedule");
+
+    function renderSchedule(data) {
+      if (!data || !Array.isArray(data.family_members) || !data.family_members.every(name => typeof name === "string" && name.trim())) {
+        throw new Error("family_members must be a list of names.");
+      }
+      if (!data.activities || typeof data.activities !== "object" || Array.isArray(data.activities)) {
+        throw new Error("activities must be a mapping of weekdays to family members.");
+      }
+
+      const members = data.family_members;
+      const header = document.createElement("thead");
+      const headerRow = document.createElement("tr");
+      const dayHeading = document.createElement("th");
+      dayHeading.scope = "col";
+      dayHeading.textContent = "";
+      headerRow.append(dayHeading);
+
+      for (const [index, member] of members.entries()) {
+        const heading = document.createElement("th");
+        heading.scope = "col";
+        heading.className = `member-heading member-${index % 4}`;
+        const sigil = document.createElement("span");
+        sigil.className = "member-sigil";
+        sigil.setAttribute("aria-hidden", "true");
+        sigil.textContent = member.charAt(0).toUpperCase();
+        const name = document.createElement("span");
+        name.textContent = member;
+        heading.append(sigil, name);
+        headerRow.append(heading);
+      }
+      header.append(headerRow);
+
+      const body = document.createElement("tbody");
+      for (const day of weekdays) {
+        const row = document.createElement("tr");
+        const dayCell = document.createElement("th");
+        dayCell.scope = "row";
+        const dayMeta = document.createElement("div");
+        dayMeta.className = "day-meta";
+        dayMeta.textContent = day;
+        const timeAxis = document.createElement("div");
+        timeAxis.className = "time-axis";
+        for (let hour = dayStartMinutes / 60 + 1; hour < dayEndMinutes / 60; hour++) {
+          const label = document.createElement("span");
+          label.className = "time-label";
+          label.style.setProperty("--hour", String(hour - dayStartMinutes / 60));
+          label.textContent = `${hour % 12 || 12} ${hour < 12 ? "AM" : "PM"}`;
+          timeAxis.append(label);
+        }
+        dayCell.append(dayMeta, timeAxis);
+        row.append(dayCell);
+
+        for (const [index, member] of members.entries()) {
+          const cell = document.createElement("td");
+          cell.className = `timeline-cell member-${index % 4}`;
+          const entries = data.activities[day]?.[member] ?? [];
+          if (!Array.isArray(entries)) {
+            throw new Error(`Activities for ${day} / ${member} must be a list.`);
+          }
+
+          const meta = document.createElement("div");
+          meta.className = "timeline-meta";
+          const grid = document.createElement("div");
+          grid.className = "time-grid";
+          grid.setAttribute("aria-hidden", "true");
+          const eventLayer = document.createElement("div");
+          eventLayer.className = "event-layer";
+
+          for (const entry of entries) {
+            const activity = typeof entry === "string" ? { activity: entry } : entry;
+            if (!activity || typeof activity.activity !== "string" || !activity.activity.trim()) {
+              throw new Error(`Each activity for ${day} / ${member} must have an activity name.`);
+            }
+            if (activity.start == null && activity.end == null) {
+              const label = document.createElement("span");
+              label.className = "untimed-activity";
+              label.textContent = activity.activity;
+              label.title = `${activity.activity} (time not set)`;
+              meta.append(label);
+              continue;
+            }
+            if (typeof activity.start !== "string" || typeof activity.end !== "string") {
+              throw new Error(`Both start and end are required for ${activity.activity}.`);
+            }
+            const start = parseTime(activity.start);
+            const end = parseTime(activity.end);
+            if (start < dayStartMinutes || end > dayEndMinutes || end <= start) {
+              throw new Error(`${activity.activity} must start and end between 07:00 and 21:00.`);
+            }
+
+            const event = document.createElement("div");
+            event.className = "timed-activity";
+            event.style.setProperty("--event-top", `${(start - dayStartMinutes) / dayDurationMinutes * 100}%`);
+            event.style.setProperty("--event-height", `${(end - start) / dayDurationMinutes * 100}%`);
+            const name = document.createElement("strong");
+            name.textContent = activity.activity;
+            event.append(name);
+            eventLayer.append(event);
+          }
+
+          cell.append(meta, grid, eventLayer);
+          row.append(cell);
+        }
+        body.append(row);
+      }
+
+      table.replaceChildren(header, body);
+    }
+
+    function parseTime(value) {
+      const match = /^(\d{2}):(\d{2})$/.exec(value);
+      if (!match || Number(match[1]) > 23 || Number(match[2]) > 59) {
+        throw new Error(`Invalid time "${value}". Use 24-hour HH:MM format.`);
+      }
+      return Number(match[1]) * 60 + Number(match[2]);
+    }
+
+    async function loadSchedule() {
+      if (window.location.protocol === "file:") return;
+      try {
+        if (!window.jsyaml) throw new Error("The YAML parser could not load. Check your internet connection and reload the page.");
+        const response = await fetch("schedule.yaml");
+        if (!response.ok) throw new Error(`Could not load schedule.yaml (${response.status}).`);
+        const data = window.jsyaml.load(await response.text());
+        renderSchedule(data);
+      } catch (error) {
+        console.error("Could not load schedule.yaml:", error);
+      }
+    }
+
+    renderSchedule(exampleSchedule);
+    loadSchedule();
+  </script>
+</body>
+</html>
