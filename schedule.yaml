@@ -10,6 +10,9 @@ activities:
       - activity: Work
         start: 08:00
         end: 17:00
+      - activity: Cubs
+        start: 18:15
+        end: 20:00
     Poppy:
       - activity: School
         start: 08:00
@@ -21,6 +24,9 @@ activities:
       - activity: School
         start: 08:50
         end: 15:20
+      - activity: Cubs
+        start: 18:15
+        end: 20:00
   Tuesday:
     Oliver:
       - activity: Work
